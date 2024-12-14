@@ -1,6 +1,7 @@
 import express from "express";
 import bcrypt from "bcrypt";
 import { PrismaClient } from "@prisma/client";
+import cors from "cors";
 
 const app = express();
 const port = 3000;
@@ -9,6 +10,7 @@ const prisma = new PrismaClient({
 });
 
 app.use(express.json());
+app.use(cors());
 
 app.post("/users", async (req, res) => {
   try {
@@ -33,7 +35,7 @@ app.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
-      return res.status(400).send({ message: "Email and password are required" });
+      return res.status(400).json({ message: "Email and password are required" });
     }
 
     const user = await prisma.user.findUnique({
@@ -41,19 +43,20 @@ app.post("/login", async (req, res) => {
     });
 
     if (!user) {
-      return res.status(400).send({ message: "User not found" });
+      return res.status(400).json({ message: "User not found" });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (isMatch) {
-      res.send("Logged in successfully");
+      res.json({ message: "Logged in successfully" });
     } else {
-      res.status(400).send({ message: "Invalid credentials" });
+      res.status(400).json({ message: "Invalid credentials" });
     }
   } catch (err) {
-    res.status(500).send({ message: err.message });
+    res.status(500).json({ message: err.message });
   }
 });
+
 
 app.listen(port, () => {
   console.log(`Server is listening on port ${port}`)
